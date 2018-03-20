@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <sub-flow name="leh-common-request-preprocess-subflow">
+        <set-variable variableName="transactionStartTime" value="#[(message.inboundProperties['transactionStartTime'] != null) ? message.inboundProperties['transactionStartTime'] : server.dateTime.format('yyyy-MM-dd HH:mm:ss.SSS')]" doc:name="Set Transaction Start Time"/>
+        <set-variable variableName="transactionId" value="#[(message.inboundProperties['transactionId'] != null) ? message.inboundProperties['transactionId'] : java.util.UUID.randomUUID().toString().replace('-', '')]" doc:name="Set Transaction ID"/>
+        <set-variable variableName="requestId" value="#[java.util.UUID.randomUUID().toString().replace('-', '')]" doc:name="Set Request ID"/>
+        <set-variable variableName="eventId" value="#[(message.inboundProperties['eventId'] != null) ? message.inboundProperties['eventId'] : 'NA']" doc:name="Set Event ID"/>
+    </sub-flow>
+</mule>

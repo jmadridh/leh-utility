@@ -1,140 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" 
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
-    <file:connector name="File" writeToDirectory="D:\IC\TransactionLogs" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
-    <asynchronous-processing-strategy name="Asynchronous_Processing_Strategy" doc:name="Asynchronous Processing Strategy"/>
-    <sub-flow name="leh-common-trans-log-complete-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call completed']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <choice doc:name="Choice">
-            <when expression="#[${appl.logging.enabled}=='true']">
-                <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-                    <add-message-property key="transactionStatus" value="#['Transaction_Completed']"/>
-                    <add-message-property key="serviceStatus" value="#[app.name + '_Completed']"/>
-                    <add-message-property key="touchPointName" value="#['Completed']"/>
-                    <add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]"/>
-                    <add-message-property key="transCompleteTime" value="#[function:systime]"/>
-                </message-properties-transformer>
-                <flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow"/>
-            </when>
-            <otherwise>
-                <logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.ic.leh" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-    
-    <sub-flow name="leh-common-trans-log-start-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call started']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <choice doc:name="Choice">
-            <when expression="#[${appl.logging.enabled}=='true']">
-                <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-                    <add-message-property key="transactionStatus" value="#['Transaction_Started']"/>
-                    <add-message-property key="serviceStatus" value="#[app.name + '_Started']"/>
-                    <add-message-property key="touchPointName" value="#['Start']"/>
-                    <add-message-property key="sequenceNo" value="#[1]"/>
-                    <add-message-property key="transStartTime" value="#[function:systime]"/>
-                </message-properties-transformer>
-                <flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow"/>
-            </when>
-            <otherwise>
-                <logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.ic.leh" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-    <sub-flow name="leh-common-service-log-start-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call started']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <choice doc:name="Choice">
-            <when expression="#[${appl.logging.enabled}=='true']">
-                <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-                    <add-message-property key="transactionStatus" value="#['Transaction_InProgress']"/>
-                    <add-message-property key="serviceStatus" value="#[app.name + '_Started']"/>
-                    <add-message-property key="touchPointName" value="#['Service Start']"/>
-                    <add-message-property key="sequenceNo" value="#[1]"/>
-                    <add-message-property key="serviceStartTime" value="#[function:systime]"/>
-                </message-properties-transformer>
-                <flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow"/>
-            </when>
-            <otherwise>
-                <logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.ic.leh" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-    <sub-flow name="leh-common-service-log-complete-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call completed']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <choice doc:name="Choice">
-            <when expression="#[${appl.logging.enabled}=='true']">
-                <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-                    <add-message-property key="transactionStatus" value="#['Transaction_InProgress']"/>
-                    <add-message-property key="serviceStatus" value="#[app.name + '_Completed']"/>
-                    <add-message-property key="touchPointName" value="#['Service Complete']"/>
-                    <add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]"/>
-                    <add-message-property key="serviceCompleteTime" value="#[function:systime]"/>
-                </message-properties-transformer>
-                <flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow"/>
-            </when>
-            <otherwise>
-                <logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.ic.leh" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-    <sub-flow name="leh-common-trans-log-touchpoint-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call in progress']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <choice doc:name="Choice">
-            <when expression="#[${appl.touchpoint.enabled}=='true']">
-                <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-                    <add-message-property key="transactionStatus" value="#['Transaction_InProgress']"/>
-                    <add-message-property key="serviceStatus" value="#[app.name + '_InProgress']"/>
-                    <add-message-property key="touchPointName" value="#[flowVars.touchPointName]"/>
-                    <add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]"/>
-                </message-properties-transformer>
-                <flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow"/>
-            </when>
-            <otherwise>
-                <logger message="#['Touchpoint Logging is disabled for the service' + app.name ]" level="DEBUG" doc:name="Logger" category="com.ic.leh"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-    <sub-flow name="leh-common-trans-log-error-subflow">
-        <flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call error']" level="INFO" category="com.ic.leh.audit" doc:name="Logger"/>
-        <message-properties-transformer scope="invocation" doc:name="Set Log Details">
-            <add-message-property key="transactionStatus" value="#['Transaction_Error']"/>
-            <add-message-property key="serviceStatus" value="#[app.name + '_Error']"/>
-            <add-message-property key="touchPointName" value="#['Error']"/>
-            <add-message-property key="sequenceNo" value="#[flowVars.sequenceNo &gt; 0 ? flowVars.sequenceNo+1 : 1]"/>
-            <add-message-property key="errorType" value="#[flowVars.errorType]"/>
-            <add-message-property key="errorSummary" value="#[flowVars.errorSummary]"/>
-            <add-message-property key="errorMessage" value="#[flowVars.errorMessage]"/>
-            <add-message-property key="errorCode" value="#[flowVars.errorCode]"/>
-            <add-message-property key="completeTime" value="#[function:systime]"/>
-        </message-properties-transformer>
-        <flow-ref name="leh-common-trans-error-log-subflow" doc:name="leh-common-trans-error-log-subflow"/>
-    </sub-flow>
-    <sub-flow name="leh-common-set-log-params-subflow">
-    	<message-properties-transformer scope="invocation" doc:name="Initialize Log">
-    		<add-message-property key="systemName" value="${appl.system.name}"/>
-            <add-message-property key="serverName" value="#[server.host]"/>
-            <add-message-property key="serviceAction" value="#[(message.inboundProperties.'http.method' != null) ? message.inboundProperties.'http.method' : '']"/>
-            <add-message-property key="transactionId" value="#[flowVars.transactionId]"/>
-            <add-message-property key="requestId" value="#[flowVars.requestId]"/>
-            <add-message-property key="serviceName" value="#[app.name]"/>
-            <add-message-property key="logTimeStamp" value="#[server.dateTime]"/>
-        </message-properties-transformer>
-    </sub-flow>
-    <sub-flow name="leh-common-trans-log-subflow">
-        <dw:transform-message doc:name="Transform Log Data">
-            <dw:set-variable variableName="logPayload"><![CDATA[%dw 1.0
+	<asynchronous-processing-strategy name="Asynchronous_Processing_Strategy" doc:name="Asynchronous Processing Strategy" />
+	<sub-flow name="leh-common-trans-log-start-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call started']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<choice doc:name="Choice">
+			<when expression="#[${appl.logging.enabled}=='true']">
+				<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+					<add-message-property key="transactionStatus" value="#['Transaction_Started']" />
+					<add-message-property key="serviceStatus" value="#[app.name + '_Started']" />
+					<add-message-property key="touchPointName" value="#['Start']" />
+					<add-message-property key="sequenceNo" value="#[1]" />
+					<add-message-property key="transStartTime" value="#[function:systime]" />
+				</message-properties-transformer>
+				<flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow" />
+			</when>
+			<otherwise>
+				<logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.zc.leh" doc:name="Logger" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="leh-common-trans-log-complete-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call completed']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<choice doc:name="Choice">
+			<when expression="#[${appl.logging.enabled}=='true']">
+				<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+					<add-message-property key="transactionStatus" value="#['Transaction_Completed']" />
+					<add-message-property key="serviceStatus" value="#[app.name + '_Completed']" />
+					<add-message-property key="touchPointName" value="#['Completed']" />
+					<add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]" />
+					<add-message-property key="transCompleteTime" value="#[function:systime]" />
+				</message-properties-transformer>
+				<flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow" />
+			</when>
+			<otherwise>
+				<logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.zc.leh" doc:name="Logger" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="leh-common-service-log-start-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call started']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<choice doc:name="Choice">
+			<when expression="#[${appl.logging.enabled}=='true']">
+				<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+					<add-message-property key="transactionStatus" value="#['Transaction_InProgress']" />
+					<add-message-property key="serviceStatus" value="#[app.name + '_Started']" />
+					<add-message-property key="touchPointName" value="#['Service Start']" />
+					<add-message-property key="sequenceNo" value="#[1]" />
+					<add-message-property key="serviceStartTime" value="#[function:systime]" />
+				</message-properties-transformer>
+				<flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow" />
+			</when>
+			<otherwise>
+				<logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.zc.leh" doc:name="Logger" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="leh-common-service-log-complete-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call completed']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<choice doc:name="Choice">
+			<when expression="#[${appl.logging.enabled}=='true']">
+				<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+					<add-message-property key="transactionStatus" value="#['Transaction_InProgress']" />
+					<add-message-property key="serviceStatus" value="#[app.name + '_Completed']" />
+					<add-message-property key="touchPointName" value="#['Completed']" />
+					<add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]" />
+					<add-message-property key="serviceCompleteTime" value="#[function:systime]" />
+				</message-properties-transformer>
+				<flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow" />
+			</when>
+			<otherwise>
+				<logger message="#['Logging is disabled for the service' + app.name ]" level="DEBUG" category="com.zc.leh" doc:name="Logger" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="leh-common-trans-log-touchpoint-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call in progress']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<choice doc:name="Choice">
+			<when expression="#[${appl.touchpoint.enabled}=='true']">
+				<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+					<add-message-property key="transactionStatus" value="#['Transaction_InProgress']" />
+					<add-message-property key="serviceStatus" value="#[app.name + '_InProgress']" />
+					<add-message-property key="touchPointName" value="#[flowVars.touchPointName]" />
+					<add-message-property key="sequenceNo" value="#[flowVars.sequenceNo + 1]" />
+				</message-properties-transformer>
+				<flow-ref name="leh-common-trans-log-subflow" doc:name="leh-common-trans-log-subflow" />
+			</when>
+			<otherwise>
+				<logger message="#['Touchpoint Logging is disabled for the service' + app.name ]" level="DEBUG" doc:name="Logger" category="com.zc.leh" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="leh-common-set-log-params-subflow">
+		<message-properties-transformer scope="invocation" doc:name="Initialize Log">
+			<add-message-property key="systemName" value="${appl.system.name}" />
+			<add-message-property key="serverName" value="#[server.host]" />
+			<add-message-property key="serviceAction"
+				value="#[(message.inboundProperties.'http.method' != null) ? message.inboundProperties.'http.method' : '']" />
+			<add-message-property key="transactionId" value="#[flowVars.transactionId]" />
+			<add-message-property key="requestId" value="#[flowVars.requestId]" />
+			<add-message-property key="serviceName" value="#[app.name]" />
+			<add-message-property key="logTimeStamp" value="#[server.dateTime]" />
+		</message-properties-transformer>
+	</sub-flow>
+	<sub-flow name="leh-common-trans-log-subflow">
+		<dw:transform-message doc:name="Transform Log Data">
+			<dw:set-variable variableName="logPayload"><![CDATA[%dw 1.0
 %output application/json
 ---
 {
@@ -159,13 +146,33 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 	(errorSummary: flowVars.errorSummary) when flowVars.errorSummary?,
 	(errorMessage: flowVars.errorMessage) when flowVars.errorMessage?	
 }]]></dw:set-variable>
-        </dw:transform-message>
-        <logger message="#[flowVars.logPayload]" level="INFO" category="com.ic.leh.trans.log" doc:name="Logger- Write Log to ELK"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Log written to ELK file']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-    </sub-flow>
-    <sub-flow name="leh-common-trans-error-log-subflow">
-        <dw:transform-message doc:name="Transform Log Data">
-            <dw:set-variable variableName="logPayload"><![CDATA[%dw 1.0
+		</dw:transform-message>
+		<logger message="#[flowVars.logPayload]" level="INFO" category="com.zc.leh.trans.log" doc:name="Logger- Write Log to ELK" />
+		<logger
+			message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Log written to ELK file']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+	</sub-flow>
+	<sub-flow name="leh-common-trans-log-error-subflow">
+		<flow-ref name="leh-common-set-log-params-subflow" doc:name="leh-common-set-log-params-subflow" />
+		<logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call error']"
+			level="INFO" category="com.zc.leh.audit" doc:name="Logger" />
+		<message-properties-transformer scope="invocation" doc:name="Set Log Details">
+			<add-message-property key="transactionStatus" value="#['Transaction_Error']" />
+			<add-message-property key="serviceStatus" value="#[app.name + '_Error']" />
+			<add-message-property key="touchPointName" value="#['Error']" />
+			<add-message-property key="sequenceNo" value="#[flowVars.sequenceNo &gt; 0 ? flowVars.sequenceNo+1 : 1]" />
+			<add-message-property key="errorType" value="#[flowVars.errorType]" />
+			<add-message-property key="errorSummary" value="#[flowVars.errorSummary]" />
+			<add-message-property key="errorMessage" value="#[flowVars.errorMessage]" />
+			<add-message-property key="errorCode" value="#[flowVars.errorCode]" />
+			<add-message-property key="completeTime" value="#[function:systime]" />
+		</message-properties-transformer>
+		<flow-ref name="leh-common-trans-error-log-subflow" doc:name="leh-common-trans-error-log-subflow" />
+	</sub-flow>
+	
+	<sub-flow name="leh-common-trans-error-log-subflow">
+		<dw:transform-message doc:name="Transform Log Data">
+			<dw:set-variable variableName="logPayload"><![CDATA[%dw 1.0
 %output application/json
 ---
 {
@@ -190,16 +197,18 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 	(errorSummary: flowVars.errorSummary) when flowVars.errorSummary?,
 	(errorMessage: flowVars.errorMessage) when flowVars.errorMessage?
 }]]></dw:set-variable>
-        </dw:transform-message>
-        <logger message="#[flowVars.logPayload]" level="ERROR" category="com.ic.leh.trans.error.log" doc:name="Logger- Write Error Log to ELK"/>
-        <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Error Log written to ELK file']" level="INFO" doc:name="Logger" category="com.ic.leh.audit"/>
-        <flow-ref name="leh-common-trans-error-log-sfdc-subflow" doc:name="leh-common-trans-error-log-sfdc-subflow"/>
-    </sub-flow>
-    <sub-flow name="leh-common-trans-error-log-sfdc-subflow">
-        <choice doc:name="Choice">
-            <when expression="#[flowVars.stopLogWrite != 'true']">
-                <dw:transform-message doc:name="Transform Message">
-                    <dw:set-variable variableName="logSFDCPayload"><![CDATA[%dw 1.0
+		</dw:transform-message>
+		<logger message="#[flowVars.logPayload]" level="ERROR" category="com.zc.leh.trans.error.log" doc:name="Logger- Write Error Log to ELK" />
+		<logger
+			message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Error Log written to ELK file']"
+			level="INFO" doc:name="Logger" category="com.zc.leh.audit" />
+		<flow-ref name="leh-common-trans-error-log-sfdc-subflow" doc:name="leh-common-trans-error-log-sfdc-subflow" />
+	</sub-flow>
+	<sub-flow name="leh-common-trans-error-log-sfdc-subflow">
+		<choice doc:name="Choice">
+			<when expression="#[flowVars.stopLogWrite != 'true']">
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-variable variableName="logSFDCPayload"><![CDATA[%dw 1.0
 %output application/json
 ---
 {
@@ -207,14 +216,15 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 
 	
 }]]></dw:set-variable>
-                </dw:transform-message>
-                <logger message="#[flowVars.logSDFCPayload]" level="ERROR" category="com.ic.leh.trans.sdfc.log" doc:name="Logger- Write Error Log to SDFC"/>
-                <logger message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Error Log written to SFDC file']" level="INFO" category="com.ic.leh.audit" doc:name="Logger"/>
-            </when>
-            <otherwise>
-                <logger message="**** Don't write log *****" level="INFO" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-    </sub-flow>
-
+				</dw:transform-message>
+				<logger message="#[flowVars.logSDFCPayload]" level="ERROR" category="com.zc.leh.trans.sdfc.log" doc:name="Logger- Write Error Log to SDFC" />
+				<logger
+					message="#['Service:' + app.name + ', ' + 'Transaction: ' + flowVars.transactionId + ' - ' + flowVars.serviceAction + ' call - Error Log written to SFDC file']"
+					level="INFO" category="com.zc.leh.audit" doc:name="Logger" />
+			</when>
+			<otherwise>
+				<logger message="**** Don't write log *****" level="INFO" doc:name="Logger" />
+			</otherwise>
+		</choice>
+	</sub-flow>
 </mule>

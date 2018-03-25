@@ -1,10 +1,14 @@
-package com.ic.leh;
+package com.zc.leh;
 
 public class CustomException extends Exception {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5575855558721538730L;
+	
 	private String exceptionMsg;
 	public CustomException (String exceptionMsg) {
-		System.out.println(exceptionMsg);
 		this.exceptionMsg = exceptionMsg;
 	}
 
